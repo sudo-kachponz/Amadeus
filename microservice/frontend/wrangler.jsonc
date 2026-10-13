@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amadeus-holo",
+  "main": ".open-next/worker.js",
+  "workers_dev": false,
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "AMADEUS_API_URL": "https://api.neutrack.id",
+    "AMADEUS_JWT_SECRET": "4717c9e077085e7f109aa8c81d3f88862653fce237fe02f6f943382ac8075e34",
+    "SUPABASE_URL": "https://xgkregdtpyuczsjpnvlk.supabase.co",
+    "QRIS_DYNAMIC_ENABLED": "true"
+  }
+}

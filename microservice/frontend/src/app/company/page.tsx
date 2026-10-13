@@ -310,11 +310,7 @@ export default function CompanyPage() {
                 <h3 className="section-head text-2xl text-foreground mb-2">{b.title}</h3>
                 <p className="text-[14px] text-slate-500 mb-5">by {b.author}</p>
                 <p className="text-[15px] text-slate-600 dark:text-slate-400 leading-relaxed mb-8 flex-1">{b.blurb}</p>
-                {b.href ? (
-                  <a href={b.href} className="holo-ring holo-cta self-start">Get the e-book <ArrowRight className="w-4 h-4" /></a>
-                ) : (
-                  <span className="text-[14px] text-slate-500">Available soon on neutrack.id</span>
-                )}
+                <a href="/ebook" className="holo-ring holo-cta self-start">Get the e-book <ArrowRight className="w-4 h-4" /></a>
               </div>
             ))}
           </div>

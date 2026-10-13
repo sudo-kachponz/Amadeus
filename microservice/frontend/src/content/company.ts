@@ -149,7 +149,12 @@ export interface Book {
   title: string;
   author: string;
   blurb: string;
-  href?: string; // TODO: link halaman jual
+  cover: string;
+  chapters: string[];
+  price: number;
+  compareAt: number;
+  productSlug: string;
+  href?: string;
 }
 
 export const LIBRARY: Book[] = [
@@ -158,6 +163,18 @@ export const LIBRARY: Book[] = [
     author: "Firania Putri Harsanti",
     blurb:
       "Six rooms, one curious rabbit, and real stories from building Ling Chinese Lab and Neutrack AI Glove. A workbook for thinking like a developer.",
+    cover: "/ebook-cover.png",
+    chapters: [
+      "Paradoks Ilmu Pengetahuan",
+      "Kebijaksanaan dimulai dari Rasa Ingin Tahu",
+      "Metakognisi, Belajarlah Selayaknya Bernapas",
+      "Berpikir Seperti Manusia Renaisans",
+      "Strategi dan Kreativitas",
+      "Against All Odds",
+    ],
+    price: 60000,
+    compareAt: 85000,
+    productSlug: "my-mind-palace-vol-1",
   },
 ];
 
