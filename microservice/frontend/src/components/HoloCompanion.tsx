@@ -175,9 +175,7 @@ export function HoloCompanion() {
     const FRAME_MS = 42; // ~24fps cap
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      // Skip when hidden, throttled, or hero HoloStage is covering us
-      const heroVisible = window.scrollY < H * 0.7;
-      if (document.hidden || now - last < FRAME_MS || heroVisible) { if (heroVisible) last = now; return; }
+      if (document.hidden || now - last < FRAME_MS) return;
       const dt = Math.min(2.5, (now - last) / 16.67);
       last = now;
       const t = (now - t0) / 1000;
