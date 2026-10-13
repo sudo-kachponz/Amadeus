@@ -117,7 +117,7 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
 
     const seedSwarm = () => {
       const area = W * H;
-      N = Math.round(Math.min(isMobile ? 60 : 140, Math.max(30, area / (isMobile ? 5000 : 6000))));
+      N = Math.round(Math.min(isMobile ? 100 : 250, Math.max(50, area / (isMobile ? 3000 : 4000))));
       sx = new Float32Array(N);
       sy = new Float32Array(N);
       sz = new Float32Array(N);
@@ -325,27 +325,25 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
       const pa: [number, number, number] = [0, 0, 0];
 
       if (core && bandIn > 0) {
-        const RAMP = " .:+x*oX08#@";
-        const MSEG = isMobile ? 48 : 80;
-        const VPTS = 5;
-        const fontSize = isMobile ? 10 : 13;
+        const HEX = "0123456789ABCDEF";
+        const MSEG = isMobile ? 64 : 120;
+        const fontSize = isMobile ? 9 : 11;
         ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         const reach = Math.PI * 2 * bandIn;
-        for (let i = 0; i < MSEG; i++) {
-          const u = (i / MSEG) * Math.PI * 2;
-          if (u > reach) break;
-          for (let j = 0; j <= VPTS; j++) {
-            const v = (j / VPTS) * 2 - 1;
+        for (let edge = 0; edge < 2; edge++) {
+          const v = edge === 0 ? -1 : 1;
+          for (let i = 0; i < MSEG; i++) {
+            const u = (i / MSEG) * Math.PI * 2;
+            if (u > reach) break;
             mobius(u + spin, v, pa);
             const p = project(pa[0], pa[1], pa[2]);
             const depth = clamp01((p[2] + 1.4) / 2.8);
-            const bright = depth * 0.55 + Math.sin(u * 3 + t * 1.2) * 0.2 + 0.25;
-            const ch = RAMP[Math.min(RAMP.length - 1, Math.floor(clamp01(bright) * (RAMP.length - 1)))];
-            if (ch === " ") continue;
+            const idx = Math.floor((u / (Math.PI * 2) * 7 + t * 2 + edge * 8) % HEX.length);
+            const ch = HEX[idx];
             const h = foil + u / (Math.PI * 2);
-            ctx.fillStyle = col(h, (0.5 + depth * 0.45) * bandIn, bright > 0.6 ? 0.3 : 0);
+            ctx.fillStyle = col(h, (0.55 + depth * 0.4) * bandIn, depth > 0.5 ? 0.35 : 0);
             ctx.fillText(ch, p[0], p[1]);
           }
         }

@@ -89,7 +89,7 @@ export function HoloCompanion() {
     window.addEventListener("resize", resize);
 
     // Riding agents — a lighter cousin of the hero swarm, glued to the band.
-    const NA = mobile ? 70 : 130;
+    const NA = mobile ? 50 : 100;
     const aPhase = new Float32Array(NA), aOff = new Float32Array(NA), aSize = new Float32Array(NA), aHue = new Float32Array(NA);
     for (let i = 0; i < NA; i++) {
       aPhase[i] = Math.random() * Math.PI * 2;
@@ -252,29 +252,27 @@ export function HoloCompanion() {
         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
       }
 
-      // ---- möbius band — ASCII twin spirals ----
+      // ---- möbius band — two hex-ASCII edge spirals ----
       const spin = reduced ? 0 : t * 0.22;
       const bandA = cl01(pb) * intro;
       if (bandA > 0.02) {
-        const RAMP = " .:+x*oX08#@";
-        const SEG = mobile ? 48 : 80;
-        const VPTS = 5;
-        const fontSize = mobile ? 10 : 13;
+        const HEX = "0123456789ABCDEF";
+        const SEG = mobile ? 64 : 120;
+        const fontSize = mobile ? 9 : 11;
         ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        for (let i = 0; i < SEG; i++) {
-          const u = (i / SEG) * Math.PI * 2;
-          for (let j = 0; j <= VPTS; j++) {
-            const v = (j / VPTS) * 2 - 1;
+        for (let edge = 0; edge < 2; edge++) {
+          const v = edge === 0 ? -1 : 1;
+          for (let i = 0; i < SEG; i++) {
+            const u = (i / SEG) * Math.PI * 2;
             mobius(u + spin, v, pa);
             const P = proj(pa[0], pa[1], pa[2]);
             const depth = cl01((P[2] + 1.4) / 2.8);
-            const bright = depth * 0.55 + Math.sin(u * 3 + t * 1.2) * 0.2 + 0.25;
-            const ch = RAMP[Math.min(RAMP.length - 1, Math.floor(cl01(bright) * (RAMP.length - 1)))];
-            if (ch === " ") continue;
+            const idx = Math.floor((u / (Math.PI * 2) * 7 + t * 2 + edge * 8) % HEX.length);
+            const ch = HEX[idx];
             const h = foil + u / (Math.PI * 2);
-            ctx.fillStyle = col(h, (0.5 + depth * 0.45) * bandA, bright > 0.6 ? 0.3 : 0);
+            ctx.fillStyle = col(h, (0.55 + depth * 0.4) * bandA, depth > 0.5 ? 0.35 : 0);
             ctx.fillText(ch, P[0], P[1]);
           }
         }
