@@ -172,10 +172,12 @@ export function HoloCompanion() {
       return o3;
     };
 
-    const FRAME_MS = 33; // ~30fps cap
+    const FRAME_MS = 42; // ~24fps cap
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (document.hidden || now - last < FRAME_MS) return;
+      // Skip when hidden, throttled, or hero HoloStage is covering us
+      const heroVisible = window.scrollY < H * 0.7;
+      if (document.hidden || now - last < FRAME_MS || heroVisible) { if (heroVisible) last = now; return; }
       const dt = Math.min(2.5, (now - last) / 16.67);
       last = now;
       const t = (now - t0) / 1000;
@@ -255,8 +257,8 @@ export function HoloCompanion() {
       // ---- möbius band (fades with anchor's band value) ----
       const spin = reduced ? 0 : t * 0.22;
       const bandA = cl01(pb) * intro;
-      if (bandA > 0.02) {
-        const SEG = mobile ? 36 : 64;
+      if (bandA > 0.02 && !mobile) {
+        const SEG = 64;
         const quads: { d: number; p: number[]; u: number }[] = [];
         for (let i = 0; i < SEG; i++) {
           const u0 = (i / SEG) * Math.PI * 2, u1 = ((i + 1) / SEG) * Math.PI * 2;
