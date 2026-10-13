@@ -79,7 +79,7 @@ export function HoloCompanion() {
       W = window.innerWidth;
       H = window.innerHeight;
       mobile = W < 768;
-      dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1 : 1.5);
+      dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.75 : 2);
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       canvas.style.width = `${W}px`;
@@ -89,7 +89,7 @@ export function HoloCompanion() {
     window.addEventListener("resize", resize);
 
     // Riding agents — a lighter cousin of the hero swarm, glued to the band.
-    const NA = mobile ? 30 : 60;
+    const NA = mobile ? 70 : 130;
     const aPhase = new Float32Array(NA), aOff = new Float32Array(NA), aSize = new Float32Array(NA), aHue = new Float32Array(NA);
     for (let i = 0; i < NA; i++) {
       aPhase[i] = Math.random() * Math.PI * 2;
@@ -172,10 +172,10 @@ export function HoloCompanion() {
       return o3;
     };
 
-    const FRAME_MS = 42; // ~24fps cap
+    const FRAME_MS = 33; // 30fps cap
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (document.hidden || now - last < FRAME_MS) return;
+      if (document.hidden || now - last < FRAME_MS) { if (document.hidden) last = now; return; }
       const dt = Math.min(2.5, (now - last) / 16.67);
       last = now;
       const t = (now - t0) / 1000;
@@ -237,7 +237,7 @@ export function HoloCompanion() {
       ctx.lineJoin = "round";
 
       // ---- rays ----
-      const RAYS = mobile ? 6 : 12;
+      const RAYS = mobile ? 12 : 20;
       for (let i = 0; i < RAYS; i++) {
         const ang = ((i * 2.399) % (Math.PI * 2)) + t * 0.07 * (i % 2 ? 1 : -1);
         const puls = 0.45 + 0.55 * Math.sin(t * (0.5 + (i % 5) * 0.17) + i);
@@ -255,8 +255,8 @@ export function HoloCompanion() {
       // ---- möbius band (fades with anchor's band value) ----
       const spin = reduced ? 0 : t * 0.22;
       const bandA = cl01(pb) * intro;
-      if (bandA > 0.02 && !mobile) {
-        const SEG = 64;
+      if (bandA > 0.02) {
+        const SEG = mobile ? 72 : 120;
         const quads: { d: number; p: number[]; u: number }[] = [];
         for (let i = 0; i < SEG; i++) {
           const u0 = (i / SEG) * Math.PI * 2, u1 = ((i + 1) / SEG) * Math.PI * 2;
