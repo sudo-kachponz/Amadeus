@@ -117,7 +117,7 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
 
     const seedSwarm = () => {
       const area = W * H;
-      N = Math.round(Math.min(isMobile ? 190 : 440, Math.max(90, area / (isMobile ? 2400 : 3400))));
+      N = Math.round(Math.min(isMobile ? 80 : 180, Math.max(40, area / (isMobile ? 5000 : 7000))));
       sx = new Float32Array(N);
       sy = new Float32Array(N);
       sz = new Float32Array(N);
@@ -157,7 +157,7 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
       W = rect.width;
       H = rect.height;
       isMobile = W < 640;
-      dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.75 : 2);
+      dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.5);
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       canvas.style.width = `${W}px`;
@@ -294,7 +294,7 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
       /* 1b. Volumetric rays — light escaping the nucleus through the band. */
       const rayIn = reduced ? 1 : clamp01((t - 0.9) / 1.6);
       if (core && rayIn > 0) {
-        const RAYS = isMobile ? 14 : 22;
+        const RAYS = isMobile ? 6 : 12;
         const maxLen = R * 3.2;
         ctx.save();
         for (let i = 0; i < RAYS; i++) {
@@ -321,7 +321,7 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
 
       /* 2. Möbius band — the agent loop. */
       const bandIn = reduced ? 1 : clamp01((t - 0.35) / 1.5);
-      const SEG = isMobile ? 84 : 144;
+      const SEG = isMobile ? 36 : 64;
       const spin = reduced ? 0 : t * 0.22;
       const pa: [number, number, number] = [0, 0, 0];
 
@@ -664,9 +664,13 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
       if (reduced) draw(now);
     };
 
+    let lastFrame = 0;
+    const FRAME_MS = 33; // ~30fps cap
     const loop = (now: number) => {
-      if (visible) draw(now);
       raf = requestAnimationFrame(loop);
+      if (!visible || now - lastFrame < FRAME_MS) return;
+      lastFrame = now;
+      draw(now);
     };
 
     if (reduced) draw(performance.now());
