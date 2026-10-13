@@ -24,7 +24,8 @@ import { resolveCorsOrigin } from "../config/cors.js";
 import { jsonSchemaToZod } from "./jsonSchemaToZod.js";
 import { callFn } from "../db/rpc.js";
 import { env } from "../config/env.js";
-import { searchKnowledgeBase, listKnowledgeBaseDocuments, getAgentKnowledgeBases } from "./executors/kbClient.js";
+import { hybridSearch } from "./executors/ragRetrieval.js";
+import { searchKnowledgeBase, getAgentKnowledgeBases } from "./executors/kbClient.js";
 import { logLlmUsageEvent, measurementBodyOverrides, netraSamplingParams, extractReasoning } from "../telemetry/llmUsage.js";
 
 const mcpHost = loadPortRange().host;
@@ -613,49 +614,77 @@ async function loadMcpTools(
 }
 
 /**
- * Builds KB tools for an agent: search + list documents.
- * Returns empty array when the agent has no knowledge bases attached.
+ * Builds RAG tools for an agent: hybrid search (dense + BM25 + RRF) with citations.
+ * Always available when rag_documents has data — no longer gated on KB linkage.
  */
 async function loadKnowledgeBaseTools(agentId: string): Promise<DynamicStructuredTool[]> {
   const kbs = await getAgentKnowledgeBases(agentId);
-  if (kbs.length === 0) return [];
-
-  const kbList = kbs.map((kb) => `${kb.kb_id} (${kb.name})`).join(', ');
+  const kbIds = kbs.map((kb) => kb.kb_id);
 
   return [
     new DynamicStructuredTool({
       name: "search_knowledge_base",
       description:
-        `Search this agent's attached knowledge base(s) for relevant reference entries ` +
-        `(e.g. SDN/sanctions list, high-risk country list, sanctioned bank list). ` +
-        `Call this once per party name detected in the transaction message before giving a verdict. ` +
-        `Available kb_id values: ${kbList}.`,
+        `Search the document knowledge base using hybrid retrieval (semantic + keyword). ` +
+        `Returns numbered references [1]..[N] with source document, section, and page info. ` +
+        `ALWAYS cite the reference numbers in your answer, e.g. "berdasarkan dokumen [1]..." ` +
+        `Call this for any factual question that may be answered by uploaded documents.`,
       schema: z.object({
-        query: z.string().describe("The party name or term to look up in the knowledge base"),
-        kb_id: z.string().describe("Which attached knowledge base to search"),
+        query: z.string().describe("The search query — be specific for best results"),
       }),
-      func: async ({ query: searchQuery, kb_id }: { query: string; kb_id: string }) => {
-        const results = await searchKnowledgeBase(kb_id, searchQuery);
-        if (results.length === 0) return `No matches found in knowledge base ${kb_id} for "${searchQuery}".`;
-        return results
-          .map((r) => `[${r.filename}] (relevance ${r.rank.toFixed(3)}) ${r.snippet}`)
-          .join('\n\n');
+      func: async ({ query: searchQuery }: { query: string }) => {
+        // Primary: enhanced hybrid search on rag_documents
+        const result = await hybridSearch(searchQuery, { topK: 5 });
+        if (result.chunks.length > 0) {
+          const refs = result.chunks.map((c, i) => {
+            const parts = [c.docTitle ?? 'Dokumen'];
+            if (c.section) parts.push(c.section);
+            if (c.heading) parts.push(c.heading);
+            const pages = c.startPage != null
+              ? c.startPage === c.endPage ? `hal. ${c.startPage}` : `hal. ${c.startPage}-${c.endPage}`
+              : '';
+            return `[${i + 1}] ${parts.join(' | ')}${pages ? `, ${pages}` : ''} (similarity: ${c.similarity.toFixed(3)})\n${c.content}`;
+          });
+          return refs.join('\n\n');
+        }
+
+        // Fallback: tsvector search on kb_documents (legacy data without embeddings)
+        if (kbIds.length > 0) {
+          for (const kbId of kbIds) {
+            const legacy = await searchKnowledgeBase(kbId, searchQuery);
+            if (legacy.length > 0) {
+              return legacy
+                .map((r, i) => `[${i + 1}] ${r.filename} (relevance: ${r.rank.toFixed(3)})\n${r.snippet}`)
+                .join('\n\n');
+            }
+          }
+        }
+
+        return `Tidak ditemukan dokumen yang relevan untuk "${searchQuery}".`;
       },
     }),
     new DynamicStructuredTool({
       name: "list_knowledge_base_documents",
       description:
-        `List all documents stored in a knowledge base. Use this to see what reference data is available ` +
-        `before searching. Available kb_id values: ${kbList}.`,
-      schema: z.object({
-        kb_id: z.string().describe("Which knowledge base to list documents from"),
-      }),
-      func: async ({ kb_id }: { kb_id: string }) => {
-        const docs = await listKnowledgeBaseDocuments(kb_id);
-        if (docs.length === 0) return `No documents found in knowledge base ${kb_id}.`;
-        return docs
-          .map((d) => `- ${d.filename} [${d.file_type}] (${d.status}, ${d.text_length} chars)`)
-          .join('\n');
+        `List all documents in the knowledge base to see what reference data is available.`,
+      schema: z.object({}),
+      func: async () => {
+        // Check both tables
+        const ragDocs = await query<{ file_id: string; doc_title: string; doc_type: string; chunks: string }>(
+          `SELECT file_id, coalesce(doc_title, file_id) as doc_title, coalesce(doc_type, 'unknown') as doc_type, count(*)::text as chunks
+           FROM rag_documents GROUP BY file_id, doc_title, doc_type ORDER BY max(created_at) DESC`,
+        );
+        const lines: string[] = ragDocs.rows.map((d) => `- ${d.doc_title} [${d.doc_type}] (${d.chunks} chunks)`);
+
+        if (kbIds.length > 0) {
+          const kbDocs = await query<{ filename: string; file_type: string; status: string }>(
+            `SELECT filename, file_type, status FROM kb_documents WHERE kb_id = ANY($1) ORDER BY uploaded_at DESC`,
+            [kbIds],
+          );
+          for (const d of kbDocs.rows) lines.push(`- ${d.filename} [${d.file_type}] (${d.status}, legacy)`);
+        }
+
+        return lines.length > 0 ? lines.join('\n') : 'Belum ada dokumen di knowledge base.';
       },
     }),
   ];
