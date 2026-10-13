@@ -252,35 +252,30 @@ export function HoloCompanion() {
         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
       }
 
-      // ---- möbius band (fades with anchor's band value) ----
+      // ---- möbius band — ASCII twin spirals ----
       const spin = reduced ? 0 : t * 0.22;
       const bandA = cl01(pb) * intro;
       if (bandA > 0.02) {
-        const SEG = mobile ? 72 : 120;
-        const quads: { d: number; p: number[]; u: number }[] = [];
+        const RAMP = " .:+x*oX08#@";
+        const SEG = mobile ? 48 : 80;
+        const VPTS = 5;
+        const fontSize = mobile ? 10 : 13;
+        ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         for (let i = 0; i < SEG; i++) {
-          const u0 = (i / SEG) * Math.PI * 2, u1 = ((i + 1) / SEG) * Math.PI * 2;
-          mobius(u0 + spin, -1, pa); let P = proj(pa[0], pa[1], pa[2]); const ax = P[0], ay = P[1], ad = P[2];
-          mobius(u0 + spin, 1, pa); P = proj(pa[0], pa[1], pa[2]); const bx = P[0], by = P[1], bd = P[2];
-          mobius(u1 + spin, 1, pa); P = proj(pa[0], pa[1], pa[2]); const qx = P[0], qy = P[1], qd = P[2];
-          mobius(u1 + spin, -1, pa); P = proj(pa[0], pa[1], pa[2]);
-          quads.push({ d: (ad + bd + qd + P[2]) / 4, p: [ax, ay, bx, by, qx, qy, P[0], P[1]], u: u0 });
-        }
-        quads.sort((m, n) => m.d - n.d);
-        for (const Q of quads) {
-          const [x0, y0, x1, y1, x2, y2, x3, y3] = Q.p;
-          const depth = cl01((Q.d + 1.4) / 2.8), h = foil + Q.u / (Math.PI * 2);
-          const g = ctx.createLinearGradient(x0, y0, x1, y1);
-          const a = (dark ? 0.36 : 0.3) * (0.35 + depth * 0.65) * bandA;
-          g.addColorStop(0, col(h, a * 0.25)); g.addColorStop(0.5, col(h + 0.12, a)); g.addColorStop(1, col(h + 0.24, a * 0.25));
-          ctx.fillStyle = g;
-          ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath(); ctx.fill();
-          const edgeA = (dark ? 0.8 : 0.75) * (0.3 + depth * 0.7) * bandA;
-          const disp = (0.6 + depth * 1.2) * (dark ? 1 : 0.5);
-          for (const [ox, hs] of [[-disp, 0], [0, 0.5], [disp, 0.78]] as const) {
-            ctx.strokeStyle = col(h + hs, edgeA * (hs === 0.5 ? 1 : 0.5), 0.45);
-            ctx.lineWidth = (0.7 + depth) * (hs === 0.5 ? 1 : 0.8);
-            ctx.beginPath(); ctx.moveTo(x0 + ox, y0); ctx.lineTo(x3 + ox, y3); ctx.moveTo(x1 + ox, y1); ctx.lineTo(x2 + ox, y2); ctx.stroke();
+          const u = (i / SEG) * Math.PI * 2;
+          for (let j = 0; j <= VPTS; j++) {
+            const v = (j / VPTS) * 2 - 1;
+            mobius(u + spin, v, pa);
+            const P = proj(pa[0], pa[1], pa[2]);
+            const depth = cl01((P[2] + 1.4) / 2.8);
+            const bright = depth * 0.55 + Math.sin(u * 3 + t * 1.2) * 0.2 + 0.25;
+            const ch = RAMP[Math.min(RAMP.length - 1, Math.floor(cl01(bright) * (RAMP.length - 1)))];
+            if (ch === " ") continue;
+            const h = foil + u / (Math.PI * 2);
+            ctx.fillStyle = col(h, (0.5 + depth * 0.45) * bandA, bright > 0.6 ? 0.3 : 0);
+            ctx.fillText(ch, P[0], P[1]);
           }
         }
       }

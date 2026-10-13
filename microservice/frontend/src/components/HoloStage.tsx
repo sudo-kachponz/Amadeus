@@ -117,7 +117,7 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
 
     const seedSwarm = () => {
       const area = W * H;
-      N = Math.round(Math.min(isMobile ? 190 : 440, Math.max(90, area / (isMobile ? 2400 : 3400))));
+      N = Math.round(Math.min(isMobile ? 60 : 140, Math.max(30, area / (isMobile ? 5000 : 6000))));
       sx = new Float32Array(N);
       sy = new Float32Array(N);
       sz = new Float32Array(N);
@@ -319,71 +319,34 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
         ctx.restore();
       }
 
-      /* 2. Möbius band — the agent loop. */
+      /* 2. Möbius band — ASCII twin spirals */
       const bandIn = reduced ? 1 : clamp01((t - 0.35) / 1.5);
-      const SEG = isMobile ? 84 : 144;
       const spin = reduced ? 0 : t * 0.22;
       const pa: [number, number, number] = [0, 0, 0];
 
       if (core && bandIn > 0) {
-        const quads: { d: number; pts: number[]; u: number }[] = [];
+        const RAMP = " .:+x*oX08#@";
+        const MSEG = isMobile ? 48 : 80;
+        const VPTS = 5;
+        const fontSize = isMobile ? 10 : 13;
+        ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         const reach = Math.PI * 2 * bandIn;
-        for (let i = 0; i < SEG; i++) {
-          const u0 = (i / SEG) * Math.PI * 2;
-          const u1 = ((i + 1) / SEG) * Math.PI * 2;
-          if (u0 > reach) break;
-          mobius(u0 + spin, -1, pa);
-          let p = project(pa[0], pa[1], pa[2]);
-          const ax = p[0], ay = p[1], ad = p[2];
-          mobius(u0 + spin, 1, pa);
-          p = project(pa[0], pa[1], pa[2]);
-          const bx = p[0], by = p[1], bd = p[2];
-          mobius(u1 + spin, 1, pa);
-          p = project(pa[0], pa[1], pa[2]);
-          const cxp = p[0], cyp = p[1], cd = p[2];
-          mobius(u1 + spin, -1, pa);
-          p = project(pa[0], pa[1], pa[2]);
-          quads.push({ d: (ad + bd + cd + p[2]) / 4, pts: [ax, ay, bx, by, cxp, cyp, p[0], p[1]], u: u0 });
-        }
-        quads.sort((p, q) => p.d - q.d);
-
-        for (const q of quads) {
-          const [x0, y0, x1, y1, x2, y2, x3, y3] = q.pts;
-          const depth = clamp01((q.d + 1.4) / 2.8);
-          const h = foil + q.u / (Math.PI * 2);
-          const g = ctx.createLinearGradient(x0, y0, x1, y1);
-          const a = (dark ? 0.42 : 0.26) * (0.35 + depth * 0.65);
-          g.addColorStop(0, col(h, a * 0.25));
-          g.addColorStop(0.5, col(h + 0.12, a));
-          g.addColorStop(1, col(h + 0.24, a * 0.25));
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.moveTo(x0, y0);
-          ctx.lineTo(x1, y1);
-          ctx.lineTo(x2, y2);
-          ctx.lineTo(x3, y3);
-          ctx.closePath();
-          ctx.fill();
-
-          // The single continuous edge — what makes it a möbius, not a ring.
-          // Drawn three times at sub-pixel offsets so the rim splits into
-          // colour channels the way a real prism edge disperses light.
-          const edgeA = (dark ? 0.85 : 0.6) * (0.3 + depth * 0.7);
-          const disp = (0.6 + depth * 1.4) * (dark ? 1 : 0.5);
-          const chans: [number, number, number][] = [
-            [-disp, 0, 0.0],
-            [0, 0, 0.5],
-            [disp, 0, 0.78],
-          ];
-          for (const [ox, oy, hueShift] of chans) {
-            ctx.strokeStyle = col(h + hueShift, edgeA * (hueShift === 0.5 ? 1 : 0.55), 0.45);
-            ctx.lineWidth = (0.8 + depth * 1.1) * (hueShift === 0.5 ? 1 : 0.8);
-            ctx.beginPath();
-            ctx.moveTo(x0 + ox, y0 + oy);
-            ctx.lineTo(x3 + ox, y3 + oy);
-            ctx.moveTo(x1 + ox, y1 + oy);
-            ctx.lineTo(x2 + ox, y2 + oy);
-            ctx.stroke();
+        for (let i = 0; i < MSEG; i++) {
+          const u = (i / MSEG) * Math.PI * 2;
+          if (u > reach) break;
+          for (let j = 0; j <= VPTS; j++) {
+            const v = (j / VPTS) * 2 - 1;
+            mobius(u + spin, v, pa);
+            const p = project(pa[0], pa[1], pa[2]);
+            const depth = clamp01((p[2] + 1.4) / 2.8);
+            const bright = depth * 0.55 + Math.sin(u * 3 + t * 1.2) * 0.2 + 0.25;
+            const ch = RAMP[Math.min(RAMP.length - 1, Math.floor(clamp01(bright) * (RAMP.length - 1)))];
+            if (ch === " ") continue;
+            const h = foil + u / (Math.PI * 2);
+            ctx.fillStyle = col(h, (0.5 + depth * 0.45) * bandIn, bright > 0.6 ? 0.3 : 0);
+            ctx.fillText(ch, p[0], p[1]);
           }
         }
       }
@@ -598,12 +561,6 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
         const size = sSize[i] * (0.45 + depth * 0.95) * swarmIn;
         const a = (0.4 + depth * 0.55) * (sBound[i] ? 1 : 0.5);
 
-        // Depth of field: the focal plane sits on the band, so particles
-        // far in front of or behind it bloom out instead of staying crisp.
-        const blur = Math.abs(depth - 0.55) * (isMobile ? 4 : 6);
-        ctx.shadowBlur = blur;
-        ctx.shadowColor = col(h, a * 0.8);
-
         if (speed > 0.012) {
           p = project(sx[i] - svx[i] * 2.5, sy[i] - svy[i] * 2.5, sz[i] - svz[i] * 2.5);
           // Clamp the trail in screen space — a fast particle near the camera
@@ -628,8 +585,6 @@ export function HoloStage({ children, core = true }: { children?: React.ReactNod
           ctx.arc(X, Y, Math.max(0.3, size), 0, Math.PI * 2);
           ctx.fill();
         }
-
-        ctx.shadowBlur = 0;
 
         if (hasPointer && links < maxLinks) {
           const q = Math.hypot(X - mx, Y - my);
