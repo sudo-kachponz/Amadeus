@@ -269,8 +269,7 @@ export function HoloCompanion() {
             mobius(u + spin, v, pa);
             const P = proj(pa[0], pa[1], pa[2]);
             const depth = cl01((P[2] + 1.4) / 2.8);
-            const idx = Math.floor((u / (Math.PI * 2) * 7 + t * 2 + edge * 8) % HEX.length);
-            const ch = HEX[idx];
+            const ch = HEX[(i * 7 + edge * 11 + (i * i * 3)) % HEX.length];
             const h = foil + u / (Math.PI * 2);
             ctx.fillStyle = col(h, (0.55 + depth * 0.4) * bandA, depth > 0.5 ? 0.35 : 0);
             ctx.fillText(ch, P[0], P[1]);
