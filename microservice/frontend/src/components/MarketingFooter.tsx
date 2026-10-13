@@ -147,6 +147,12 @@ export function MarketingFooter() {
                   </div>
                   @NeutrackAIWorld
                 </a>
+                <a href="https://www.linkedin.com/in/firania-putri-harsanti-ab77a2237" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600/10 flex items-center justify-center border border-blue-600/20">
+                    <LinkedinIcon className="w-4 h-4 text-blue-600" />
+                  </div>
+                  Firania Putri Harsanti
+                </a>
               </div>
             </div>
 
@@ -186,6 +192,7 @@ export function MarketingFooter() {
                 <a href="https://www.instagram.com/kachponz/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors"><InstagramIcon className="w-4 h-4" /></a>
                 <a href="https://wa.me/6281359659649" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors"><WhatsappIcon className="w-4 h-4" /></a>
                 <a href="mailto:neutracksudo@gmail.com" className="hover:text-slate-900 dark:hover:text-white transition-colors"><Mail className="w-4 h-4" /></a>
+                <a href="https://www.linkedin.com/in/firania-putri-harsanti-ab77a2237" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors"><LinkedinIcon className="w-4 h-4" /></a>
               </div>
             </div>
 
