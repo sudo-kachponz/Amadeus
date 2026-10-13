@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import { ArrowRight, BookOpen } from "lucide-react";
@@ -12,15 +12,12 @@ import { HoloText } from "@/components/HoloText";
 import { HoloCompanion } from "@/components/HoloCompanion";
 import { BrutalFrame } from "@/components/BrutalFrame";
 import { ScrubReveal } from "@/components/Motion";
-import { COMPANY, STORY, SERVICES, WORK, LIBRARY, WEBINARS } from "@/content/company";
+import { MediaCard } from "@/components/MediaCard";
+import { COMPANY, STORY, SERVICES, WORK, LIBRARY } from "@/content/company";
+import { VIDEOS, WEBINAR_POSTS, PRESS, MEDIA_SECTION_LABELS } from "@/content/media";
 
 const ACRONYM = ["Autonomous", "Multi", "Agent", "Decision", "Executor", "Unified", "Swarm"];
 
-/**
- * The story is the one bold move on this page: a foil thread that draws
- * itself down the timeline as you scroll, from a glove prototype to Amadeus.
- * Everything around it stays quiet.
- */
 function StoryThread() {
   const ref = useRef<HTMLOListElement>(null);
   const reduce = useReducedMotion();
@@ -29,19 +26,16 @@ function StoryThread() {
 
   return (
     <ol ref={ref} className="relative">
-      {/* Track + drawn foil line */}
       <div className="absolute left-[15px] md:left-[23px] top-2 bottom-2 w-px bg-[var(--holo-wire)]" aria-hidden="true" />
       <motion.div
         className="absolute left-[14px] md:left-[22px] top-2 bottom-2 w-[3px] rounded-full origin-top"
         style={{ background: "var(--holo-foil)", scaleY: reduce ? 1 : progress }}
         aria-hidden="true"
       />
-
       {STORY.map((ch, i) => {
         const last = i === STORY.length - 1;
         return (
           <li key={ch.title} className="relative pl-12 md:pl-20 pb-14 md:pb-20 last:pb-0">
-            {/* Wrapper owns the absolute position; .holo-ring forces position: relative. */}
             <span className="absolute left-0 top-0">
               <span
                 className={`flex items-center justify-center rounded-full font-mono text-[12px] md:text-[13px] w-8 h-8 md:w-12 md:h-12 border ${
@@ -72,8 +66,25 @@ function StoryThread() {
   );
 }
 
+// Dynamic section numbering — skips empty groups
+function useSectionNumbers() {
+  const sections: string[] = ["Story", "What we do", "Flagship", "Work"];
+  if (VIDEOS.length > 0) sections.push("Videos");
+  if (PRESS.length > 0) sections.push("In the news");
+  sections.push("Learn with us", "Founder");
+  return (name: string) => {
+    const idx = sections.indexOf(name);
+    return idx >= 0 ? `${String(idx + 1).padStart(2, "0")} / ${name}` : name;
+  };
+}
+
 export default function CompanyPage() {
   const work = WORK.filter((w) => !w.draft);
+  const sec = useSectionNumbers();
+  const [showAllPress, setShowAllPress] = useState(false);
+  const [showAllWebinars, setShowAllWebinars] = useState(false);
+  const pressVisible = showAllPress ? PRESS : PRESS.slice(0, 6);
+  const webinarsVisible = showAllWebinars ? WEBINAR_POSTS : WEBINAR_POSTS.slice(0, 8);
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-clip w-full max-w-[100vw]">
@@ -104,7 +115,7 @@ export default function CompanyPage() {
         </HoloStage>
       </section>
 
-      {/* Story */}
+      {/* 01 Story */}
       <section
         id="story"
         className="relative py-16 md:py-28 scroll-mt-24"
@@ -113,7 +124,7 @@ export default function CompanyPage() {
         data-holo-label="Story"
       >
         <div className="max-w-4xl mx-auto px-5 md:px-6">
-          <span className="sec-index">01 / Story</span>
+          <span className="sec-index">{sec("Story")}</span>
           <h2 className="section-head text-3xl md:text-5xl text-foreground mb-5 max-w-[18ch]">
             From a glove to a swarm of agents
           </h2>
@@ -124,7 +135,7 @@ export default function CompanyPage() {
         </div>
       </section>
 
-      {/* Services */}
+      {/* 02 Services */}
       <section
         className="relative py-16 md:py-24"
         data-holo-anchor="0.08 0.25 0.06 0"
@@ -132,7 +143,7 @@ export default function CompanyPage() {
         data-holo-label="Services"
       >
         <div className="max-w-6xl mx-auto px-5 md:px-6">
-          <span className="sec-index">02 / What we do</span>
+          <span className="sec-index">{sec("What we do")}</span>
           <h2 className="section-head text-3xl md:text-4xl text-foreground mb-12 max-w-[22ch]">
             We build it, then we teach it
           </h2>
@@ -155,7 +166,7 @@ export default function CompanyPage() {
         </div>
       </section>
 
-      {/* Amadeus */}
+      {/* 03 Amadeus */}
       <section
         className="relative py-16 md:py-28 overflow-hidden"
         data-holo-anchor="0.78 0.45 0.16 1"
@@ -164,7 +175,7 @@ export default function CompanyPage() {
       >
         <div className="max-w-6xl mx-auto px-5 md:px-6 grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7">
-            <span className="sec-index">03 / Flagship</span>
+            <span className="sec-index">{sec("Flagship")}</span>
             <h2 className="section-head text-4xl md:text-6xl mb-6">
               <span className="holo-text">Amadeus</span>
             </h2>
@@ -201,15 +212,14 @@ export default function CompanyPage() {
               <Link href="/playground" className="wire-btn">Open the playground</Link>
             </div>
           </div>
-          {/* The companion tesseract docks into this column on desktop. */}
           <div className="hidden lg:block lg:col-span-5 min-h-[380px]" aria-hidden="true" />
         </div>
       </section>
 
-      {/* Work */}
+      {/* 04 Work */}
       <section className="relative py-16 md:py-24" data-holo-label="Work">
         <div className="max-w-6xl mx-auto px-5 md:px-6">
-          <span className="sec-index">04 / Work</span>
+          <span className="sec-index">{sec("Work")}</span>
           <h2 className="section-head text-3xl md:text-4xl text-foreground mb-12">Selected work</h2>
           <div className="hidden md:grid grid-cols-12 gap-8 pb-4 text-[13px] text-slate-500 border-b border-[var(--holo-wire)]">
             <span className="col-span-3">Project</span>
@@ -225,18 +235,61 @@ export default function CompanyPage() {
               <p className="md:col-span-3 text-[14px] text-slate-800 dark:text-slate-200 leading-relaxed">{w.result}</p>
             </article>
           ))}
-          <a
-            href={COMPANY.links.youtube}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-8 inline-flex items-center gap-2 text-[14px] text-slate-600 dark:text-slate-300 hover:text-foreground underline underline-offset-4 decoration-[var(--holo-violet)]"
-          >
-            <YoutubeIcon className="w-4 h-4" /> Watch the demos on YouTube
-          </a>
+          {VIDEOS.length > 0 && (
+            <a
+              href="#videos"
+              className="mt-8 inline-flex items-center gap-2 text-[14px] text-slate-600 dark:text-slate-300 hover:text-foreground underline underline-offset-4 decoration-[var(--holo-violet)]"
+            >
+              <YoutubeIcon className="w-4 h-4" /> Watch the demos below
+            </a>
+          )}
         </div>
       </section>
 
-      {/* Learn with us */}
+      {/* 05 Videos */}
+      {VIDEOS.length > 0 && (
+        <section id="videos" className="relative py-16 md:py-24 scroll-mt-24" data-holo-label="Videos">
+          <div className="max-w-6xl mx-auto px-5 md:px-6">
+            <span className="sec-index">{sec("Videos")}</span>
+            <h2 className="section-head text-3xl md:text-4xl text-foreground mb-12">
+              {MEDIA_SECTION_LABELS.videos.heading}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {VIDEOS.map((v, i) => (
+                <MediaCard key={v.id} item={v} index={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 06 Press */}
+      {PRESS.length > 0 && (
+        <section className="relative py-16 md:py-24" data-holo-label="Press">
+          <div className="max-w-6xl mx-auto px-5 md:px-6">
+            <span className="sec-index">{sec("In the news")}</span>
+            <h2 className="section-head text-3xl md:text-4xl text-foreground mb-12">
+              {MEDIA_SECTION_LABELS.press.heading}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {pressVisible.map((p) => (
+                <MediaCard key={p.id} item={p} />
+              ))}
+            </div>
+            {PRESS.length > 6 && (
+              <button
+                onClick={() => setShowAllPress(!showAllPress)}
+                aria-expanded={showAllPress}
+                className="wire-btn mt-8"
+              >
+                {showAllPress ? "Show less" : `Show all (${PRESS.length})`}
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* 07 Learn with us */}
       <section
         className="relative py-16 md:py-24"
         data-holo-anchor="0.1 0.3 0.06 0"
@@ -244,11 +297,13 @@ export default function CompanyPage() {
         data-holo-label="Learn"
       >
         <div className="max-w-6xl mx-auto px-5 md:px-6">
-          <span className="sec-index">05 / Learn with us</span>
+          <span className="sec-index">{sec("Learn with us")}</span>
           <h2 className="section-head text-3xl md:text-4xl text-foreground mb-12 max-w-[24ch]">
             E-books and webinars from the projects above
           </h2>
-          <div className="grid lg:grid-cols-2 gap-6">
+
+          {/* E-books */}
+          <div className="grid lg:grid-cols-2 gap-6 mb-12">
             {LIBRARY.map((b) => (
               <div key={b.title} className="brutal-panel p-6 sm:p-8 md:p-10 flex flex-col">
                 <BookOpen className="w-6 h-6 text-[var(--holo-violet)] mb-6" />
@@ -262,54 +317,60 @@ export default function CompanyPage() {
                 )}
               </div>
             ))}
-
-            <div className="brutal-panel p-6 sm:p-8 md:p-10 flex flex-col">
-              <h3 className="section-head text-2xl text-foreground mb-6">Webinars</h3>
-              {WEBINARS.length > 0 ? (
-                <ul className="space-y-5">
-                  {WEBINARS.map((w) => (
-                    <li key={w.title} className="flex gap-4 items-start">
-                      {w.poster && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={w.poster} alt={`Poster: ${w.title}`} className="w-20 aspect-[4/5] object-cover rounded" />
-                      )}
-                      <div>
-                        <p className="font-semibold text-foreground">{w.title}</p>
-                        <p className="text-[13px] text-slate-500 mb-2">{w.date}</p>
-                        {w.slides && (
-                          <a href={w.slides} className="text-[13px] underline underline-offset-4 decoration-[var(--holo-violet)]">
-                            View slides
-                          </a>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <>
-                  <p className="text-[15px] text-slate-600 dark:text-slate-400 leading-relaxed mb-8 flex-1">
-                    Machine learning for beginners, self-supervised learning and world models, and building with AI
-                    coding agents. New sessions are announced on Instagram first.
-                  </p>
-                  <a
-                    href={COMPANY.links.instagram}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="wire-btn self-start inline-flex items-center gap-2"
-                  >
-                    <InstagramIcon className="w-4 h-4" /> Follow @neutrack.id
-                  </a>
-                </>
-              )}
-            </div>
           </div>
+
+          {/* Webinars */}
+          <h3 className="section-head text-2xl text-foreground mb-6">Webinars</h3>
+          {WEBINAR_POSTS.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {webinarsVisible.map((w) => (
+                  <MediaCard key={w.id} item={w} />
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3 mt-6">
+                {WEBINAR_POSTS.length > 8 && (
+                  <button
+                    onClick={() => setShowAllWebinars(!showAllWebinars)}
+                    aria-expanded={showAllWebinars}
+                    className="wire-btn"
+                  >
+                    {showAllWebinars ? "Show less" : `Show all (${WEBINAR_POSTS.length})`}
+                  </button>
+                )}
+                <a
+                  href={COMPANY.links.instagram}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="wire-btn inline-flex items-center gap-2"
+                >
+                  <InstagramIcon className="w-4 h-4" /> Follow @neutrack.id
+                </a>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-[15px] text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
+                Machine learning for beginners, self-supervised learning and world models, and building with AI
+                coding agents. New sessions are announced on Instagram first.
+              </p>
+              <a
+                href={COMPANY.links.instagram}
+                target="_blank"
+                rel="noreferrer"
+                className="wire-btn inline-flex items-center gap-2"
+              >
+                <InstagramIcon className="w-4 h-4" /> Follow @neutrack.id
+              </a>
+            </>
+          )}
         </div>
       </section>
 
-      {/* Founder */}
+      {/* 08 Founder */}
       <section className="relative py-16 md:py-24" data-holo-label="Founder">
         <div className="max-w-4xl mx-auto px-5 md:px-6">
-          <span className="sec-index">06 / Founder</span>
+          <span className="sec-index">{sec("Founder")}</span>
           <div className="brutal-panel holo-sheen p-6 sm:p-8 md:p-10 grid md:grid-cols-12 gap-6 md:gap-10 items-start">
             <div className="md:col-span-5">
               <h2 className="section-head text-2xl md:text-3xl text-foreground mb-2">{COMPANY.founder.name}</h2>

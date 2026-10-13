@@ -161,12 +161,3 @@ export const LIBRARY: Book[] = [
   },
 ];
 
-export interface Webinar {
-  title: string;
-  date: string;
-  poster?: string; // path di /public
-  slides?: string;
-}
-
-// Diisi dari poster IG. Kosong = section menampilkan ajakan follow.
-export const WEBINARS: Webinar[] = [];
