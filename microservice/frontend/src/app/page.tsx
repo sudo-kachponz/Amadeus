@@ -4,10 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { TransactionGraph } from "@/components/TransactionGraph";
 import {
-  ShieldCheck,
-  Lock,
-  Server,
-  FileCheck,
   Database,
   ArrowRight,
   BookOpen,
@@ -57,6 +53,10 @@ const FAQ_DATA = [
   {
     question: "Can Amadeus reduce processing costs and latency?",
     answer: "Yes. Instead of manually navigating UiPath Orchestrator, filling in arguments, and waiting — your team simply tells the agent what they need. The agent discovers process arguments, fills them in, triggers the job, and reports back. What used to take 15 minutes of clicking becomes one chat message."
+  },
+  {
+    question: "Can we run the LLM on-premise for data security?",
+    answer: "Absolutely. Amadeus supports fully on-premise LLM deployment on your own infrastructure — minimum NVIDIA H100, H200, or B300 GPUs. Your data never leaves your network. This is ideal for enterprises with strict data residency, air-gapped environments, or regulatory requirements that prohibit sending data to third-party cloud providers."
   }
 ];
 
@@ -309,9 +309,9 @@ export default function Home() {
             {/* Top-Right subtle Aurora mesh glow */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-[#ff4fd8]/10 via-[#3df2ff]/5 to-transparent rounded-full blur-3xl -mt-48 -mr-48 pointer-events-none" />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 relative z-10">
+            <div className="relative z-10 max-w-3xl mx-auto">
 
-              {/* Left Column: FAQ */}
+              {/* FAQ */}
               <div className="space-y-10">
                 <div className="space-y-4">
                   <span className="sec-index">06 / Questions</span>
@@ -345,48 +345,6 @@ export default function Home() {
                   })}
                 </div>
               </div>
-
-              {/* Right Column: Security */}
-              <div className="space-y-10">
-                <div className="space-y-4">
-                  <span className="sec-index">07 / Compliance</span>
-                  <h3 className="section-head text-3xl md:text-4xl text-foreground">Compliance &amp; Security</h3>
-                </div>
-
-                <div className="relative">
-                  {[
-                    { icon: ShieldCheck, name: "ISO 27001 Ready", note: "Information security management aligned to certification controls." },
-                    { icon: Lock, name: "HMAC-SHA512", note: "Financial step transitions are request-signed and tamper-evident." },
-                    { icon: Server, name: "Air-Gapped Node", note: "On-premise deployment with zero outbound database exposure." },
-                    { icon: FileCheck, name: "OJK / BI Compliant", note: "Meets Indonesian regulatory requirements for trade finance." },
-                    { icon: Database, name: "Immutable Audit", note: "Append-only ledger with cryptographic proof of every mutation." },
-                  ].map(({ icon: Icon, name, note }, i) => (
-                    <div key={name} className="relative">
-                      {i !== 0 && (
-                        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-cyan-500/0 via-fuchsia-500/20 to-yellow-500/0" />
-                      )}
-                      <div
-                        className="grid grid-cols-12 gap-4 items-center py-6 group hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors -mx-4 px-4 rounded-xl"
-                      >
-                        <div className="col-span-2 md:col-span-1">
-                          <span className="font-mono font-medium text-fuchsia-500 text-lg transition-colors">
-                            {String(i + 1).padStart(2, "0")}
-                          </span>
-                        </div>
-                        <div className="col-span-10 md:col-span-11 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-                          <div className="flex items-center gap-2.5 sm:w-2/5 flex-shrink-0">
-                            <Icon className="w-[18px] h-[18px] text-[#8b5cf6] transition-colors flex-shrink-0" />
-                            <span className="font-semibold text-[15px] text-slate-800 dark:text-slate-200">{name}</span>
-                          </div>
-                          <div className="text-[14px] text-slate-600 dark:text-slate-400 leading-relaxed sm:w-3/5">
-                            {note}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
           </ScrubReveal>
@@ -402,7 +360,7 @@ export default function Home() {
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 space-y-16">
           <div className="text-left space-y-4 max-w-2xl">
-            <span className="sec-index">08 / System map</span>
+            <span className="sec-index">07 / System map</span>
             <h2 className="section-head text-3xl md:text-4xl text-foreground">Architecture at a glance</h2>
             <p className="text-slate-400 text-lg leading-relaxed">
               Amadeus is strictly divided into four specialized layers to ensure scalability and separation of concerns. From the interactive canvas to the persistent storage, every layer is built for enterprise orchestration.

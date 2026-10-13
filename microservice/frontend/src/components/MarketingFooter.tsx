@@ -113,7 +113,7 @@ export function MarketingFooter() {
             {/* Left — headline + social proof */}
             <div className="space-y-8 lg:sticky lg:top-32">
               <div className="space-y-4">
-                <span className="sec-index">09 / Let&apos;s talk</span>
+                <span className="sec-index">08 / Let&apos;s talk</span>
                 <h2 className="section-head text-[clamp(1.6rem,4.5vw,2.75rem)] wire-text">
                   Siap Otomasi<br />Operasional Anda?
                 </h2>
